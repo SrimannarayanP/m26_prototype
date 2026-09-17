@@ -1,0 +1,126 @@
+<!-- dashboard.html -->
+
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>CrowdCascade</title>
+
+        <style>
+            body {
+                font-family: "Courier New", Courier, monospace;
+                background: #0a0a0a;
+                color: #fff;
+                padding: 20px;
+            }
+
+            .grid {
+                display: flex;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .zone {
+                background: #1a1a1a;
+                padding: 20px;
+                border: 2px solid #333;
+                border-radius: 8px;
+                width: 200px;
+                text-align: center;
+            }
+
+            .safe {
+                border-color: #00ff00;
+                color: #00ff00;
+            }
+
+            .warning {
+                border-color: #ffaa00;
+                color: #ffaa00;
+            }
+
+            .critical {
+                border-color: #ff0000;
+                color: #ff0000;
+                background: #3a0000;
+                animation: blink 1s infinite;
+            }
+
+            #alert-box {
+                display: none;
+                background: #ff0000;
+                color: white;
+                padding: 15px;
+                margin-top: 20px;
+                font-weight: bold;
+                text-align: center;
+                border-radius: 5px;
+            }
+
+            @keyframes blink {
+                50% {
+                    border-color: #ff0000;
+                    background: #1a0000;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>CrowdCascade Live Telemetry</h1>
+
+        <p>Predictive Velocity Engine: ACTIVE | RTSP Fusion: ACTIVE</p>
+
+        <div
+            class = 'grid'
+            id = 'zones'
+        ></div>
+
+        <div id = 'alert-box'>
+            HIGH RISK: Zone 3 Density Spiking. Redirect incoming traffic to Gate C immediately.
+        </div>
+    </body>
+
+    <script>
+        async function fetchData() {
+            const res = await fetch('/api/status')
+            const data = await res.json()
+
+            const container = document.getElementById('zones')
+            const alertBox = document.getElementById('alert-box')
+
+            container.innerHTML = ''
+
+            let triggerAlert = false
+
+            for (const [zone, density] of Object.entries(data)) {
+                let statusClass = 'safe'
+
+                if (density > 100) statusClass = 'warning'
+
+                if (density > 200) {
+                    statusClass = 'critical'
+
+                    if (zone == "Zone 3") triggerAlert = true
+                }
+
+                container.innerHTML += `
+                    <div class = "zone ${statusClass}">
+                        <h2>${zone}</h2>
+
+                        <h1 style = "font-size: 48px; margin: 10px 0;">
+                            ${density}    
+                        </h1>
+
+                        <p>Active Devices</p>
+                    </div>
+                `
+            }
+
+            alertBox.style.display = triggerAlert ? 'block' : 'none'
+        }
+
+        setInterval(fetchData, 1000)
+    </script>
+</html>
